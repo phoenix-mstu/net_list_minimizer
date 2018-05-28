@@ -83,6 +83,7 @@ class Node:
                 return 1
 
         self.children.append(NewNode)
+        return 1
 
     def printTree(self, level):
         str = ''
