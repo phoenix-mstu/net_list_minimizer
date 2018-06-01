@@ -93,7 +93,7 @@ class Node:
         for i, Child in enumerate(self.children):
             Child.printTree(level + 1)
 
-    def finishTree(self):
+    def finishTreeFirst(self):
         if self.is_real_net:
             self.real_ip_volume = self.net.ip_volume
             self.real_ip_records_count = 1
@@ -103,6 +103,18 @@ class Node:
             for Child in self.children:
                 Child.finishTree()
                 self.real_ip_volume += Child.real_ip_volume
+                if self.is_collapsed:
+                    self.real_ip_records_count = 1
+                else:
+                    self.real_ip_records_count += Child.real_ip_records_count
+
+    def finishTree(self):
+        if self.is_real_net or self.is_collapsed:
+            self.real_ip_records_count = 1
+        else:
+            self.real_ip_records_count = 0
+            for Child in self.children:
+                Child.finishTree()
                 self.real_ip_records_count += Child.real_ip_records_count
 
     def printCollapsedTree(self):
@@ -113,10 +125,12 @@ class Node:
                 Child.printCollapsedTree()
 
     def getNodesByFakeIpVolume(self, list):
-        sort_key = (self.net.ip_volume - self.real_ip_volume) * 100 + self.net.mask_size
+#         sort_key = (self.net.ip_volume - self.real_ip_volume) * 100000 + (100000 - self.real_ip_records_count)
+#         sort_key = (self.net.ip_volume - self.real_ip_volume) * 100 + self.net.mask_size
+        sort_key = ((self.net.ip_volume - self.real_ip_volume) / (self.real_ip_records_count - 1)) * 100 + self.net.mask_size
         list.append([sort_key, self])
         for Child in self.children:
-            if not Child.is_real_net:
+            if not Child.is_real_net and not Child.is_collapsed:
                 Child.getNodesByFakeIpVolume(list)
 
     def recursiveCollapse(self):

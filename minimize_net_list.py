@@ -35,38 +35,41 @@ for line in file.readlines():
 
         Root.addSubnet(net_tree.Node(net_tree.Net(ip, mask_size), 1))
 
-# Updating real ip counters in each node
-
-Root.finishTree();
-
-# Making a flat list of fake nodes, in this list each node has a weight atribute.
-# Nodes width less fake ip volume will have lower weight
-
-nodesByFakeIpVolume = []
-Root.getNodesByFakeIpVolume(nodesByFakeIpVolume)
-
-# Sort nodes in list by weight.
-# So collapsing the first nodes in list will have less impact on count of "not real" ips in script result
-# with a greater impact on reducing resulting ips list size
-
-nodesByFakeIpVolume.sort(key=lambda x: x[0])
-
 # Collapsing the nodes untill we have a desired resulting list size
-
+Root.finishTreeFirst();
 list_size = Root.real_ip_records_count
-for nodeArr in nodesByFakeIpVolume:
+while 1:
+    Root.finishTree();
+
+    # Making a flat list of fake nodes, in this list each node has a weight atribute.
+    # Nodes width less fake ip volume will have lower weight
+
+    nodesByFakeIpVolume = []
+    Root.getNodesByFakeIpVolume(nodesByFakeIpVolume)
+
+#     nodesByFakeIpVolume.sort(key=lambda x: x[0])
+#     print(nodesByFakeIpVolume)
+#     exit()
+
+    nodeArr = min(nodesByFakeIpVolume, key=lambda x: x[0])
     Node = nodeArr[1]
+#     Node.printTree(0);
+#     exit();
     if Node.is_collapsed: continue
+
+#     print(Node.net.mask_size);
 
     # Each fake node has several child ips that are returned in a resulting list
     # After collapsing the node resulting list size will be reduced on count of the ips that were collapsed
     # And increased by 1 - all these ips will be replaced by a single ip
     list_size = list_size + 1 - Node.recursiveCollapse()
 
+    print(list_size)
+
     if list_size <= required_list_size: break
 
 # printing the result
-Root.printCollapsedTree();
+# Root.printCollapsedTree();
 
 # printing some stats
 print('### list size:    ' + str(list_size))
