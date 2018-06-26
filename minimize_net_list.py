@@ -11,6 +11,9 @@ if len(sys.argv) < 3:
 
 filename = str(sys.argv[1])
 required_list_size = int(sys.argv[2])
+if required_list_size < 2:
+    print('Min size is 2')
+    sys.exit()
 
 file = open(filename, "r")
 if not file:
@@ -37,40 +40,11 @@ for line in file.readlines():
 
 # Collapsing the nodes untill we have a desired resulting list size
 Root.finishTreeFirst();
-list_size = Root.real_ip_records_count
-while 1:
-    Root.finishTree();
-
-    # Making a flat list of fake nodes, in this list each node has a weight atribute.
-    # Nodes width less fake ip volume will have lower weight
-
-    nodesByFakeIpVolume = []
-    Root.getNodesByFakeIpVolume(nodesByFakeIpVolume)
-
-#     nodesByFakeIpVolume.sort(key=lambda x: x[0])
-#     print(nodesByFakeIpVolume)
-#     exit()
-
-    nodeArr = min(nodesByFakeIpVolume, key=lambda x: x[0])
-    Node = nodeArr[1]
-#     Node.printTree(0);
-#     exit();
-    if Node.is_collapsed: continue
-
-#     print(Node.net.mask_size);
-
-    # Each fake node has several child ips that are returned in a resulting list
-    # After collapsing the node resulting list size will be reduced on count of the ips that were collapsed
-    # And increased by 1 - all these ips will be replaced by a single ip
-    list_size = list_size + 1 - Node.recursiveCollapse()
-
-    print(list_size)
-
-    if list_size <= required_list_size: break
+Root.collapseRoot(Root.real_ip_records_count - required_list_size)
 
 # printing the result
-# Root.printCollapsedTree();
+Root.printCollapsedTree();
 
 # printing some stats
-print('### list size:    ' + str(list_size))
+print('### list size:    ' + str(Root.real_ip_records_count))
 print('### not real ips: ' + str(Root.getNotRealIpCount()))
