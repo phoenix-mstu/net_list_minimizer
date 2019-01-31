@@ -7,3 +7,7 @@ a tool to combine networks list to desired size with the best possible accuracy
 * Then we recursively collapse nets starting from those who has the biggest weight (the biggest weight is infinity) until we have desired list size.
 
 The difficult thing is that weight of the parent nets is changed when we collapse it's child.
+
+## how to run
+
+python3 minimize_net_list.py real_net_list_example.txt 30000 | grep -v ### > result.txt
