@@ -47,4 +47,4 @@ Root.printCollapsedTree();
 
 # printing some stats
 print('### list size:    ' + str(Root.real_ip_records_count))
-print('### not real ips: ' + str(Root.getNotRealIpCount()))
+print('### not real ips: ' + str(Root.added_fake_ip_volume))
