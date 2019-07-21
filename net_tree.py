@@ -8,6 +8,8 @@ def getIpVolumeByMaskSize(mask_size):
     return 1 << (32 - mask_size);
 
 class Net:
+    __slots__ = ['mask_size', 'net', 'mask', 'ip_volume']
+
     def __init__(self, net: int, mask_size: int):
         self.mask_size = mask_size
         self.net = net & getMaskByMaskSize(mask_size)
@@ -40,6 +42,8 @@ class Net:
         return '.'.join(reversed(bytes)) + ('' if self.mask_size == 32 else "/" + str(self.mask_size))
 
 class Node:
+    __slots__ = ['net', 'children', 'is_real_net', 'real_ip_volume', 'real_ip_records_count', 'weight', 'max_child_weight', 'added_fake_ip_volume']
+
     def __init__(self, net: Net, is_real_net: int):
         self.net = net
         self.children = []
