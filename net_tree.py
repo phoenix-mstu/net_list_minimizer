@@ -48,6 +48,7 @@ class Node:
         self.real_ip_records_count = 0
         self.weight = 0.0
         self.max_child_weight = 0.0
+        self.added_fake_ip_volume = 0
 
     def getNet(self):
         return self.net
@@ -112,14 +113,26 @@ class Node:
             self.recalcWeight()
 
     def collapse(self, min_weight, max_net_delta):
+        # trying to collapse self
+        if self.weight >= min_weight:
+            self.weight = 0
+            self.max_child_weight = 0
+            delta = (self.net.ip_volume - self.real_ip_volume) - self.added_fake_ip_volume
+            self.added_fake_ip_volume = self.net.ip_volume - self.real_ip_volume
+            return self.real_ip_records_count - 1, delta
+
         net_delta = 0
+        fake_ip_delta = 0
         self.max_child_weight = 0
         for Child in self.children:
             if net_delta < max_net_delta and min_weight <= max(Child.weight, Child.max_child_weight):
-                net_delta += Child.collapse(min_weight, max_net_delta - net_delta)
+                child_net_delta, child_fake_ip_count = Child.collapse(min_weight, max_net_delta - net_delta)
+                net_delta += child_net_delta
+                fake_ip_delta += child_fake_ip_count
             self.max_child_weight = max(self.max_child_weight, Child.weight, Child.max_child_weight)
 
         if net_delta > 0:
+            self.added_fake_ip_volume += fake_ip_delta
             self.real_ip_records_count -= net_delta
             self.recalcWeight()
 
@@ -127,13 +140,16 @@ class Node:
         if self.weight >= min_weight:
             self.weight = 0
             self.max_child_weight = 0
-            return self.real_ip_records_count - 1
+            delta = (self.net.ip_volume - self.real_ip_volume) - (self.added_fake_ip_volume - fake_ip_delta)
+            self.added_fake_ip_volume = self.net.ip_volume - self.real_ip_volume
+            return self.real_ip_records_count - 1, delta
         else:
-            return net_delta
+            return net_delta, fake_ip_delta
 
     def collapseRoot(self, required_net_delta):
         while required_net_delta > 0:
-            required_net_delta -= self.collapse(self.max_child_weight, required_net_delta)
+            delta, fake_ip_volume = self.collapse(self.max_child_weight, required_net_delta)
+            required_net_delta -= delta
 
     def printCollapsedTree(self):
         if self.is_real_net or self.weight == 0:
@@ -143,8 +159,9 @@ class Node:
                 Child.printCollapsedTree()
 
     def recalcWeight(self):
-        if self.net.ip_volume - self.real_ip_volume:
-            self.weight = (self.real_ip_records_count - 1) / (self.net.ip_volume - self.real_ip_volume)
+        fake_ip_delta = self.net.ip_volume - self.real_ip_volume - self.added_fake_ip_volume
+        if fake_ip_delta:
+            self.weight = (self.real_ip_records_count - 1) / fake_ip_delta
         else:
             self.weight = float('Inf')
 
