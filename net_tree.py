@@ -39,7 +39,7 @@ class Net:
             bytes.append(str(net % 256))
             net = net >> 8
 
-        return '.'.join(reversed(bytes)) + ('' if self.mask_size == 32 else "/" + str(self.mask_size))
+        return '.'.join(reversed(bytes)) +  "/" + str(self.mask_size)
 
 class Node:
     __slots__ = ['net', 'child1', 'child2', 'is_real_net', 'real_ip_volume', 'real_ip_records_count', 'weight', 'max_child_weight', 'added_fake_ip_volume']
