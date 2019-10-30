@@ -24,7 +24,7 @@ if not file:
 # Each node has maximum two children (by design)
 
 Root = net_tree.Node(net_tree.Net(0,0), 0)
-for line in file.readlines():
+for line in file:
     result = re.search('(\d+)\.(\d+)\.(\d+)\.(\d+)(?:\/(\d+))?', line)
     if result:
         ip = 0
