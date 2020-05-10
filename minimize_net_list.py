@@ -6,8 +6,8 @@ import re
 import struct
 
 if len(sys.argv) < 3:
-    print('You must give me a filename and required list size')
-    sys.exit()
+    print('Usage: minimize_net_list.py iplist.txt MAXLISTSIZE')
+    sys.exit(1)
 
 filename = str(sys.argv[1])
 required_list_size = int(sys.argv[2])
@@ -15,7 +15,7 @@ if required_list_size < 2:
     print('Min size is 2')
     sys.exit()
 
-file = open(filename, "r")
+file = open(filename, "rt") if filename!='-' else sys.stdin
 if not file:
     print('Cant open file')
     sys.exit()
