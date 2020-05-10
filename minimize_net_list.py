@@ -46,5 +46,5 @@ Root.collapseRoot(Root.real_ip_records_count - required_list_size)
 Root.printCollapsedTree();
 
 # printing some stats
-print('### list size:    ' + str(Root.real_ip_records_count))
-print('### not real ips: ' + str(Root.added_fake_ip_volume))
+print('### list size:    ' + str(Root.real_ip_records_count), file=sys.stderr)
+print('### not real ips: ' + str(Root.added_fake_ip_volume), file=sys.stderr)
