@@ -32,14 +32,17 @@ class Net:
               return Net(self.net, mask_size)
         return 0
 
-    def getAsString(self):
+    def getAsString(self, fmt='{addr}/{masklen}'):
         net = self.net
-        bytes = []
+        mask = self.mask
+        addrbytes = []
+        maskbytes = []
         for i in range(4):
-            bytes.append(str(net % 256))
+            addrbytes.append(str(net % 256))
+            maskbytes.append(str(mask % 256))
             net = net >> 8
-
-        return '.'.join(reversed(bytes)) +  "/" + str(self.mask_size)
+            mask = mask >> 8
+        return fmt.format(addr='.'.join(reversed(addrbytes)), mask='.'.join(reversed(maskbytes)), masklen=self.mask_size)
 
 class Node:
     __slots__ = ['net', 'child1', 'child2', 'is_real_net', 'real_ip_volume', 'real_ip_records_count', 'weight', 'max_child_weight', 'added_fake_ip_volume']
@@ -175,13 +178,13 @@ class Node:
             delta, fake_ip_volume = self.collapse(self.max_child_weight, required_net_delta)
             required_net_delta -= delta
 
-    def printCollapsedTree(self):
+    def printCollapsedTree(self, fmt='{addr}/{masklen}'):
         if self.is_real_net or self.weight == 0:
-            print(self.net.getAsString())
+            print(self.net.getAsString(fmt))
         else:
             for Child in (self.child1, self.child2):
                 if Child:
-                    Child.printCollapsedTree()
+                    Child.printCollapsedTree(fmt)
 
     def recalcWeight(self):
         fake_ip_delta = self.net.ip_volume - self.real_ip_volume - self.added_fake_ip_volume
@@ -198,6 +201,4 @@ class Node:
             if Child:
                 res = res + Child.getNotRealIpCount()
         return res
-
-
-
+    
