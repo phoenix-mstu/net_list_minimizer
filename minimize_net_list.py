@@ -1,31 +1,29 @@
 #!/usr/local/bin/python3
 
+import argparse
 import sys
 import net_tree
 import re
 import struct
 
-if len(sys.argv) < 3:
-    print('Usage: minimize_net_list.py iplist.txt MAXLISTSIZE')
-    sys.exit(1)
+parser = argparse.ArgumentParser(description='Minimizes list of IPv4 addresses and networks by collapsing some subnetworks.')
+parser.add_argument('source', type=argparse.FileType('r'), help='File to read IP addresses from (use "-" to indicate stdin).')
+parser.add_argument('N', type=int, help='Size of resulting list. The smaller it is, the more extra addresses will be included into resulting subnets.')
+parser.add_argument('--mask', action='store_true', help='Use "1.2.3.4 255.255.255.0" output format instead of "1.2.3.4/24".')
 
-filename = str(sys.argv[1])
-required_list_size = int(sys.argv[2])
-if required_list_size < 2:
+args = parser.parse_args()
+
+if args.N < 2:
     print('Min size is 2')
-    sys.exit()
-
-file = open(filename, "rt") if filename!='-' else sys.stdin
-if not file:
-    print('Cant open file')
-    sys.exit()
+    sys.exit(1)
 
 # Filling the binary tree
 # Each node has maximum two children (by design)
 
 Root = net_tree.Node(net_tree.Net(0,0), 0)
-for line in file:
-    result = re.search('(\d+)\.(\d+)\.(\d+)\.(\d+)(?:\/(\d+))?', line)
+ipre = re.compile('(\d+)\.(\d+)\.(\d+)\.(\d+)(?:\/(\d+))?')
+for line in args.source:
+    result = ipre.search(line)
     if result:
         ip = 0
         for i in range(1, 5):
@@ -40,10 +38,10 @@ for line in file:
 
 # Collapsing the nodes untill we have a desired resulting list size
 Root.finishTreeFirst();
-Root.collapseRoot(Root.real_ip_records_count - required_list_size)
+Root.collapseRoot(Root.real_ip_records_count - args.N)
 
 # printing the result
-Root.printCollapsedTree();
+Root.printCollapsedTree('{addr} {mask}' if args.mask else '{addr}/{masklen}');
 
 # printing some stats
 print('### list size:    ' + str(Root.real_ip_records_count), file=sys.stderr)
