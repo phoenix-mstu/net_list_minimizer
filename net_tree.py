@@ -2,7 +2,7 @@
 BIG_MASK = (1 << 32) - 1
 
 def getMaskByMaskSize(mask_size):
-    return BIG_MASK ^ ((1 << (32 - mask_size)) - 1)
+    return BIG_MASK << (32 - mask_size)
 
 def getIpVolumeByMaskSize(mask_size):
     return 1 << (32 - mask_size)
