@@ -60,6 +60,15 @@ class Node:
 
     def getNet(self):
         return self.net
+    
+    def collapseRealChildren(self):
+        if self.child1 and self.child2 and self.child1.is_real_net and self.child2.is_real_net:
+            c1_mask_size = self.child1.net.mask_size
+            if c1_mask_size == self.child2.net.mask_size and (c1_mask_size == (self.net.mask_size + 1)):
+                self.is_real_net = 1
+                self.child1 = None
+                self.child2 = None
+        return
 
     def addSubnet(self, NewNode: 'Node'):
         if self.net.isSameNet(NewNode.net):
@@ -69,24 +78,33 @@ class Node:
                 self.child2 = None
             return 1
 
-        if self.is_real_net and self.net.hasSubnet(NewNode.net):
-            return 1
-
         if not self.net.hasSubnet(NewNode.net):
             return 0
 
-        for Child in (self.child1, self.child2):
-            if Child and Child.addSubnet(NewNode):
-                return 1
+        if self.is_real_net:
+            return 1
+        
+        # C1 is filled in first, then C2. Therefore, if there is no C1, then there is no C2.
+        if not self.child1:
+            self.child1 = NewNode
+            return 1
 
-        if self.child1:
-            CommonNet = self.child1.net.getCommonNet(NewNode.net, self.net.mask_size + 1)
-            if CommonNet:
-                CommonNode = Node(CommonNet, 0)
-                CommonNode.addSubnet(NewNode)
-                CommonNode.addSubnet(self.child1)
-                self.child1 = CommonNode
-                return 1
+        if self.child1.addSubnet(NewNode):
+            self.collapseRealChildren()
+            return 1
+        
+        if self.child2 and self.child2.addSubnet(NewNode):
+            self.collapseRealChildren()
+            return 1
+
+        CommonNet = self.child1.net.getCommonNet(NewNode.net, self.net.mask_size + 1)
+        if CommonNet:
+            CommonNode = Node(CommonNet, 0)
+            CommonNode.addSubnet(NewNode)
+            CommonNode.addSubnet(self.child1)
+            self.child1 = CommonNode
+            self.collapseRealChildren()
+            return 1
 
         if self.child2:
             CommonNet = self.child2.net.getCommonNet(NewNode.net, self.net.mask_size + 1)
@@ -95,13 +113,11 @@ class Node:
                 CommonNode.addSubnet(NewNode)
                 CommonNode.addSubnet(self.child2)
                 self.child2 = CommonNode
+                self.collapseRealChildren()
                 return 1
 
-        if not self.child1:
-            self.child1 = NewNode
-        else:
-            self.child2 = NewNode
-
+        self.child2 = NewNode
+        self.collapseRealChildren()
         return 1
 
     def printTree(self, level):
